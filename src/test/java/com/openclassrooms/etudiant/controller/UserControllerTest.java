@@ -33,9 +33,11 @@ public class UserControllerTest {
     private static final String LOGIN = "login";
     private static final String PASSWORD = "password";
 
-
     @Container
-    static MySQLContainer mySQLContainer = new MySQLContainer("mysql:latest");
+    static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0.33")
+            .withDatabaseName("test")
+            .withUsername("test")
+            .withPassword("test");
 
     @Autowired
     private UserService userService;
@@ -48,11 +50,10 @@ public class UserControllerTest {
 
     @DynamicPropertySource
     static void configureTestProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", () -> mySQLContainer.getJdbcUrl());
-        registry.add("spring.datasource.username", () -> mySQLContainer.getUsername());
-        registry.add("spring.datasource.password", () -> mySQLContainer.getPassword());
+        registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
+        registry.add("spring.datasource.username", mySQLContainer::getUsername);
+        registry.add("spring.datasource.password", mySQLContainer::getPassword);
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create");
-
     }
 
     @AfterEach
@@ -62,21 +63,18 @@ public class UserControllerTest {
 
     @Test
     public void registerUserWithoutRequiredData() throws Exception {
-        // GIVEN
         RegisterDTO registerDTO = new RegisterDTO();
 
-        // WHEN
         mockMvc.perform(MockMvcRequestBuilders.post(URL)
-                        .content(objectMapper.writeValueAsString(registerDTO))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                .content(objectMapper.writeValueAsString(registerDTO))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void registerAlreadyExistUser() throws Exception {
-        // GIVEN
         User user = new User();
         user.setFirstName(FIRST_NAME);
         user.setLastName(LAST_NAME);
@@ -90,29 +88,26 @@ public class UserControllerTest {
         registerDTO.setLogin(LOGIN);
         registerDTO.setPassword(PASSWORD);
 
-        // WHEN
         mockMvc.perform(MockMvcRequestBuilders.post(URL)
-                        .content(objectMapper.writeValueAsString(registerDTO))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                .content(objectMapper.writeValueAsString(registerDTO))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void registerUserSuccessful() throws Exception {
-        // GIVEN
         RegisterDTO registerDTO = new RegisterDTO();
         registerDTO.setFirstName(FIRST_NAME);
         registerDTO.setLastName(LAST_NAME);
         registerDTO.setLogin(LOGIN);
         registerDTO.setPassword(PASSWORD);
 
-        // WHEN
         mockMvc.perform(MockMvcRequestBuilders.post(URL)
-                        .content(objectMapper.writeValueAsString(registerDTO))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                .content(objectMapper.writeValueAsString(registerDTO))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(MockMvcResultMatchers.status().isCreated());
     }

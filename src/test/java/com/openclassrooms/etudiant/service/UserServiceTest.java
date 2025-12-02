@@ -28,6 +28,8 @@ public class UserServiceTest {
     private UserRepository userRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private JwtService jwtService;
     @InjectMocks
     private UserService userService;
 
@@ -75,4 +77,63 @@ public class UserServiceTest {
         verify(userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue()).isEqualTo(user);
     }
+
+    @Test
+    public void test_login_null_login_throws_IllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> userService.login(null, PASSWORD));
+    }
+
+    @Test
+    public void test_login_null_password_throws_IllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> userService.login(LOGIN, null));
+    }
+
+    @Test
+    public void test_login_invalid_credentials_throws_IllegalArgumentException() {
+        // GIVEN
+        when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.empty());
+
+        // THEN
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> userService.login(LOGIN, PASSWORD));
+    }
+
+    @Test
+    public void test_login_invalid_password_throws_IllegalArgumentException() {
+        // GIVEN
+        User user = new User();
+        user.setLogin(LOGIN);
+        user.setPassword("encodedPassword");
+
+        when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(PASSWORD, "encodedPassword")).thenReturn(false);
+
+        // THEN
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> userService.login(LOGIN, PASSWORD));
+    }
+
+    @Test
+    public void test_login_success_returns_token() {
+        // GIVEN
+        User user = new User();
+        user.setLogin(LOGIN);
+        user.setPassword("encodedPassword");
+
+        when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(PASSWORD, "encodedPassword")).thenReturn(true);
+
+        String expectedToken = "JWT_TOKEN";
+        when(jwtService.generateToken(any())).thenReturn(expectedToken);
+
+        // WHEN
+        String token = userService.login(LOGIN, PASSWORD);
+
+        // THEN
+        assertThat(token).isEqualTo(expectedToken);
+        verify(jwtService).generateToken(any());
+    }
+
 }
