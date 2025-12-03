@@ -35,16 +35,13 @@ public class UserServiceTest {
 
     @Test
     public void test_create_null_user_throws_IllegalArgumentException() {
-        // GIVEN
 
-        // THEN
         Assertions.assertThrows(IllegalArgumentException.class,
                 () -> userService.register(null));
     }
 
     @Test
     public void test_create_already_exist_user_throws_IllegalArgumentException() {
-        // GIVEN
         User user = new User();
         user.setFirstName(FIRST_NAME);
         user.setLastName(LAST_NAME);
@@ -53,14 +50,12 @@ public class UserServiceTest {
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD);
         when(userRepository.findByLogin(any())).thenReturn(Optional.of(user));
 
-        // THEN
         Assertions.assertThrows(IllegalArgumentException.class,
                 () -> userService.register(user));
     }
 
     @Test
     public void test_create_user() {
-        // GIVEN
         User user = new User();
         user.setFirstName(FIRST_NAME);
         user.setLastName(LAST_NAME);
@@ -69,10 +64,8 @@ public class UserServiceTest {
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD);
         when(userRepository.findByLogin(any())).thenReturn(Optional.empty());
 
-        // WHEN
         userService.register(user);
 
-        // THEN
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue()).isEqualTo(user);
@@ -92,17 +85,14 @@ public class UserServiceTest {
 
     @Test
     public void test_login_invalid_credentials_throws_IllegalArgumentException() {
-        // GIVEN
         when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.empty());
 
-        // THEN
         Assertions.assertThrows(IllegalArgumentException.class,
                 () -> userService.login(LOGIN, PASSWORD));
     }
 
     @Test
     public void test_login_invalid_password_throws_IllegalArgumentException() {
-        // GIVEN
         User user = new User();
         user.setLogin(LOGIN);
         user.setPassword("encodedPassword");
@@ -110,14 +100,12 @@ public class UserServiceTest {
         when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(PASSWORD, "encodedPassword")).thenReturn(false);
 
-        // THEN
         Assertions.assertThrows(IllegalArgumentException.class,
                 () -> userService.login(LOGIN, PASSWORD));
     }
 
     @Test
     public void test_login_success_returns_token() {
-        // GIVEN
         User user = new User();
         user.setLogin(LOGIN);
         user.setPassword("encodedPassword");
@@ -128,10 +116,8 @@ public class UserServiceTest {
         String expectedToken = "JWT_TOKEN";
         when(jwtService.generateToken(any())).thenReturn(expectedToken);
 
-        // WHEN
         String token = userService.login(LOGIN, PASSWORD);
 
-        // THEN
         assertThat(token).isEqualTo(expectedToken);
         verify(jwtService).generateToken(any());
     }

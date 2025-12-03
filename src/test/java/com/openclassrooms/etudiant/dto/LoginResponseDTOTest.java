@@ -3,8 +3,6 @@ package com.openclassrooms.etudiant.dto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.openclassrooms.etudiant.dto.LoginResponseDTO;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LoginResponseDTOTest {

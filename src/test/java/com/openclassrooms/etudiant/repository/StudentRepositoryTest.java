@@ -12,6 +12,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -59,8 +60,7 @@ class StudentRepositoryTest {
         s.setLastName("Smith");
 
         Student saved = studentRepository.save(s);
-
-        Student found = studentRepository.findById(saved.getId()).orElse(null);
+        Student found = studentRepository.findById(Objects.requireNonNull(saved.getId())).orElse(null);
 
         assertThat(found).isNotNull();
         assertThat(found.getLastName()).isEqualTo("Smith");

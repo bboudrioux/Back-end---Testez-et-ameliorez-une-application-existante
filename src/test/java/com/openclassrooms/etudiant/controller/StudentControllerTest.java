@@ -1,29 +1,26 @@
 package com.openclassrooms.etudiant.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openclassrooms.etudiant.configuration.security.CustomUserDetailService;
 import com.openclassrooms.etudiant.dto.StudentDTO;
 import com.openclassrooms.etudiant.entities.Student;
+import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.etudiant.repository.StudentRepository;
-import com.openclassrooms.etudiant.repository.UserRepository;
 import com.openclassrooms.etudiant.service.JwtService;
 import com.openclassrooms.etudiant.service.StudentService;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -39,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc(addFilters = true)
 @Testcontainers
 class StudentControllerTest {
 
@@ -58,8 +55,15 @@ class StudentControllerTest {
     @Autowired
     private StudentRepository studentRepository;
 
-    @MockBean
+    @MockitoBean
     private StudentService studentService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailService customUserDetailService;
+
 
     @DynamicPropertySource
     static void configureTestProperties(DynamicPropertyRegistry registry) {
@@ -69,14 +73,33 @@ class StudentControllerTest {
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create");
     }
 
+    private String mockJwtFor(String login) {
+            String token = "Bearer faketoken123";
+
+            User user = new User(1L, "John", "Doe", login, "encoded-password", null, null);
+
+            Mockito.when(jwtService.extractUsername("faketoken123")).thenReturn(login);
+            Mockito.when(jwtService.validateToken("faketoken123", user)).thenReturn(true);
+            Mockito.when(customUserDetailService.loadUserByUsername(login)).thenReturn(user);
+
+            return token;
+    }
+
+    private String authToken;
+
+    @BeforeEach
+    void setupToken() {
+            authToken = mockJwtFor("testuser");
+    }
+
     @AfterEach
     public void afterEach() {
         studentRepository.deleteAll();
     }
 
+
     @Test
     @DisplayName("GET /students - List all students")
-    @WithMockUser
     void testListStudents() throws Exception {
         Student s1 = new Student(1L, "Alice", "Smith", null, null);
         Student s2 = new Student(2L, "Bob", "Johnson", null, null);
@@ -86,34 +109,34 @@ class StudentControllerTest {
                         new StudentDTO(1L, "Alice", "Smith"),
                         new StudentDTO(2L, "Bob", "Johnson")));
 
-        mockMvc.perform(get("/api/students"))
+        mockMvc.perform(get("/api/students")
+                .header("Authorization", authToken))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("GET /students/{id} - Found")
-    @WithMockUser
     void testGetStudentById_found() throws Exception {
         Mockito.when(studentService.getStudentById(1L))
                 .thenReturn(Optional.of(new StudentDTO(1L, "Alice", "Smith")));
 
-        mockMvc.perform(get("/api/students/1"))
+        mockMvc.perform(get("/api/students/1")
+                .header("Authorization",authToken))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("GET /students/{id} - Not Found")
-    @WithMockUser
     void testGetStudentById_notFound() throws Exception {
         Mockito.when(studentService.getStudentById(99L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/api/students/99"))
+        mockMvc.perform(get("/api/students/99")
+                .header("Authorization", authToken))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("POST /students - Create student")
-    @WithMockUser
     void testCreateStudent() throws Exception {
         StudentDTO dto = new StudentDTO(null, "Charlie",
                 "Brown");
@@ -124,6 +147,7 @@ class StudentControllerTest {
                 .thenReturn(saved);
 
         mockMvc.perform(post("/api/students")
+                .header("Authorization",authToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk());
@@ -131,7 +155,6 @@ class StudentControllerTest {
 
     @Test
     @DisplayName("PUT /students/{id} - Not Found")
-    @WithMockUser
     void testUpdateStudent_notFound() throws Exception {
         StudentDTO updated = new StudentDTO(1L, "James", "Brown");
 
@@ -139,6 +162,7 @@ class StudentControllerTest {
                 .thenReturn(Optional.empty());
 
         mockMvc.perform(put("/api/students/1")
+                .header("Authorization",authToken)
                 .content(objectMapper.writeValueAsString(updated))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
@@ -148,7 +172,6 @@ class StudentControllerTest {
 
     @Test
     @DisplayName("PUT /students - Update student")
-    @WithMockUser
     void testUpdateStudent() throws Exception {
         StudentDTO updated = new StudentDTO(1L, "James", "Brown");
 
@@ -156,6 +179,7 @@ class StudentControllerTest {
                 .thenReturn(Optional.of(updated));
 
         mockMvc.perform(put("/api/students/1")
+                .header("Authorization",authToken)
                 .content(objectMapper.writeValueAsString(updated))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
@@ -165,13 +189,13 @@ class StudentControllerTest {
 
     @Test
     @DisplayName("DELETE /students/{id} - Deleted")
-    @WithMockUser
     void testDeleteStudent() throws Exception {
 
         Mockito.when(studentService.deleteStudent(1L))
                 .thenReturn(true);
 
-        mockMvc.perform(delete("/api/students/1"))
+        mockMvc.perform(delete("/api/students/1")
+                .header("Authorization", authToken))
                 .andDo(print())
                 .andExpect(status().isNoContent());
     }
