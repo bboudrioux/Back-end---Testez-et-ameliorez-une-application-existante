@@ -14,6 +14,7 @@ import java.util.Date;
 @Service
 public class JwtService {
 
+    // retrieve secret key from .env
     @Value("${jwt.secret}")
     private String SECRET_KEY;
     

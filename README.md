@@ -1,32 +1,40 @@
 # MS etudiant-backend
 
-Backend qui gère les APIs des utilisateurs de la bibliothèque et les CRUD des étudiants.
+Backend service managing user authentication APIs and Student CRUD operations for the application.
 
-## Configuration du backend
+## ⚙️ Backend Configuration
 
-    - name: etudiant-backend
-    - port: 8080
+| Name | Value |
+| :--- | :--- |
+| **Service Name** | `etudiant-backend` |
+| **Port** | `8080` |
 
-## Pré-requis pour le bon fonctionnement du service :
+## ✅ Prerequisites
 
-    -> JDK 21
-    -> Docker
-    -> Docker Compose
-    -> Maven 3.9.3 (https://archive.apache.org/dist/maven/maven-3/3.9.3/binaries/) ou plus
+For the service to run correctly, you must have the following installed:
 
-## Démarrage du backend
-Pour démarrer le projet backend, il faut : 
-- avoir démarré Docker-Desktop sur votre poste de travail local.
-- dans une console, se placer à la racine du projet et exécuter la commande Maven suivante :
+* **JDK**: Version 21 or higher.
+* **Docker**
+* **Docker Compose**
+* **Maven**: Version 3.9.3 or higher (https://archive.apache.org/dist/maven/maven-3/3.9.3/binaries/)
+
+## 🚀 Starting the Backend
+
+To start the backend project, perform the following steps:
+
+1.  Ensure **Docker Desktop** is running on your local machine.
+2.  In a console, navigate to the project root directory.
+3.  Execute the following Maven command:
+
 ```
 mvn spring-boot:run
 ```
 
-Cette commande va : 
- - initialiser le container Docker qui contient la base de données 
- - lancer le serveur du backend et le connecter à la base de données précédemment créée
+This command will:
+* Initialize the Docker container hosting the MySQL database.
+* Launch the backend server and connect it to the previously created database.
 
-Les traces logs devraient ressemblées à ceci : 
+The log traces should look similar to this:
 ```
 .   ____          _            __ _ _
 /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -57,7 +65,7 @@ Les traces logs devraient ressemblées à ceci :
 [etudiant-backend] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
 [etudiant-backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
 [etudiant-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-[etudiant-backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4db16677
+[etudiant-backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl4db16677
 [etudiant-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
 [etudiant-backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
 [etudiant-backend] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
@@ -72,60 +80,67 @@ enticationProvider. If the current configuration is intentional, to turn off thi
 [etudiant-backend] [           main] c.o.etudiant.EtudiantBackendApplication  : Started EtudiantBackendApplication in 10.27 seconds (process running for 10.642)
 ```
 
-Sur Docker-Desktop, vous devriez voir apparaître un container MySQL qui correspond au projet.
+You should see a MySQL container appear in Docker Desktop corresponding to the project.
 
-![1-docker-desktop](pictures/1-docker-desktop.png)
+#### Database Access Details
 
-Vous pouvez vous connecter à la base de données et vérifier que la table ```user``` a été créée automatiquement.
-Pour cela, cliquez sur le lien `mysql-1` ce qui vous amènera sur la vue complète de la base de données. 
-Dans l'onglet ```Exec```, il faut : 
+You can connect to the database to verify the automatic creation of the `user` table. Click on the `mysql-1` link in Docker Desktop to reach the full database view.
 
-1. se connecter à la base de données. Tapez la commande ci-dessous
+In the `Exec` tab:
+
+1.  **Connect to the database.** Type the command below:
 
     ```
     mysql -u etudiant_db -p
     ```
-   L'invite de commande demandera le mot de passe. Il est identique au nom d'utilisateur, c'est-à-dire ```etudiant_db```.
+    The command prompt will ask for the password. It is identical to the username: `etudiant_db`.
 
-
-2. Se connecter au schéma de base de données `etudiant_db`. Dans l'invite de commande, tapez la commande ci-dessous :
+2.  **Connect to the `etudiant_db` schema.** In the command prompt, type the command below:
 
     ```
     use etudiant_db;
     ```
   
-3. Vérifier que la table `user` existe (elle est néanmoins vide pour le moment).
+3.  **Verify the existence of the `user` table** (it is currently empty).
 
     ```
     select * from user;
     ```
-    Le résultat devrait être : `Empty set (0.00 sec)`
+    The expected result should be: `Empty set (0.00 sec)`
 
-La capture d'écran ci-dessous résume les étapes précédentes : 
+The screenshot below summarizes the previous steps:
 
 ![2-docker-desktop-bdd](pictures/2-docker-desktop-bdd.png)
 
+## 🧪 Running Tests
 
-## Exécution des tests
-Pour exécuter les tests Junit, il faut :
-- avoir démarré Docker-Desktop sur votre poste de travail local. Cette étape est nécessaire car les tests d'intégration auront besoin de Docker pour créer des bases de données temporaires de test.
-- dans une console, se placer à la racine du projet et exécuter la commande Maven suivante :
+To execute the JUnit tests, you must:
+
+* Ensure **Docker Desktop** is running, as integration tests require Docker to create temporary testing databases.
+* In a console, navigate to the project root directory.
+* Execute the following Maven command:
 
 ```
 mvn clean test
 ```
 
-## Fonctionnalités portées
+#### Detailed Test Coverage
 
-    - API de création d'un utilisateur (agent de la bibliothèque)
-    - API d'authentification d'un utilisateur (à faire)
-    - APIs CRUD des étudiants de la bibliothèque (à faire)
+The test suite includes Unit Tests (isolation) and Integration Tests (Dockerized database dependency).
 
+* **Unit Tests (Services & Utility):**
+    * **`UserService`**: Checks business logic related to user registration and retrieval.
+    * **`StudentService`**: Checks business logic related to student CRUD operations.
+    * **`JwtService`**: Validates token generation, validation, and extraction of claims (unit testing the JWT functionality).
+    * **Entity Classes (User/Student)**: Simple verification of getters, setters, and constructors.
 
-## Écrans ou blocs concernés
-    - Ecran xxx
-    - Ecran xxx
-    - Ecran xxx
+* **Integration Tests (Controllers & Repositories):**
+    * **`/api/students` Resource**: Full integration tests covering the CRUD endpoints (`POST`, `GET`, `PUT`, `DELETE`) for students, verifying database interaction.
+    * **`/api/register` and `/api/login` Resources**: Integration tests verifying user registration and authentication flow (including token return and security layer configuration).
+    * **Repository Classes (User/Student)**: Integration tests verifying Spring Data JPA mapping and database queries against a test container.
 
+## ✨ Supported Features
 
-
+* API for creating a user (library agent).
+* API for authenticating a user (**`/api/login`** - to be implemented).
+* CRUD APIs for library students (to be implemented).

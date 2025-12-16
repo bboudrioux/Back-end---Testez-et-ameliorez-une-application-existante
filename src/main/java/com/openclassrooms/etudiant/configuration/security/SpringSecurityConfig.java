@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,9 +29,10 @@ public class SpringSecurityConfig {
     private CorsConfigurationSource corsConfigurationSource;
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(customUserDetailService);
+    public AuthenticationProvider authenticationProvider() {
+        // Provide customUserDetailService in constructor
+        // authProvider.setUserDetailService is deprecated
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(customUserDetailService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
@@ -48,7 +50,8 @@ public class SpringSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource)) // utilisation lambda moderne
+                // implement cors config
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
@@ -56,6 +59,7 @@ public class SpringSecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/register", "/api/login").permitAll()
                         .anyRequest().authenticated())
+                // implement custom authfilter to retrieve and valide token to allow access to protected routes
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, ex1) -> response
