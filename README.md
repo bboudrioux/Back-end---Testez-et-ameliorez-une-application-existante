@@ -141,6 +141,6 @@ The test suite includes Unit Tests (isolation) and Integration Tests (Dockerized
 
 ## ✨ Supported Features
 
-* API for creating a user (library agent).
-* API for authenticating a user (**`/api/login`** - to be implemented).
-* CRUD APIs for library students (to be implemented).
+* API for creating a user (**`/api/register`**).
+* API for authenticating a user (**`/api/login`**).
+* CRUD APIs for library students (**`/api/students`**).
